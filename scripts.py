@@ -1,14 +1,14 @@
-import os
 import random
 
-import django
 from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
 
-from datacenter.models import (Chastisement, Commendation, Lesson, Mark,
-                               Schoolkid)
-
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings")
-django.setup()
+from datacenter.models import (
+    Chastisement,
+    Commendation,
+    Lesson,
+    Mark,
+    Schoolkid
+)
 
 
 def get_schoolkid(schoolkid_name):
@@ -31,16 +31,16 @@ def get_schoolkid(schoolkid_name):
 
 def fix_marks(schoolkid_name):
     schoolkid = get_schoolkid(schoolkid_name)
-    bad_marks = Mark.objects.get_schoolkid(
+    bad_marks = Mark.objects.filter(
         schoolkid=schoolkid,
         points__in=[2, 3]
     )
-    bad_marks.update(points=5)
+    return bad_marks.update(points=5) 
 
 
 def remove_chastisements(schoolkid_name):
     schoolkid = get_schoolkid(schoolkid_name)
-    Chastisement.objects.filter(schoolkid=schoolkid).delete()
+    return Chastisement.objects.filter(schoolkid=schoolkid).delete()
 
 
 def get_lesson(schoolkid, subject_title, mode="latest"):
@@ -56,7 +56,6 @@ def get_lesson(schoolkid, subject_title, mode="latest"):
         year_of_study=schoolkid.year_of_study,
         group_letter=schoolkid.group_letter,
         subject__title=subject_title,
-        Commendation__is_null=True,
     )
     lesson = lessons.order_by(order_by_map[mode]).first()
 
@@ -100,15 +99,11 @@ def get_random_commendation_text():
 
 def create_commendation(schoolkid_name, subject_title):
     schoolkid = get_schoolkid(schoolkid_name)
-    lesson = get_lesson(schoolkid_name, subject_title)
-    Commendation.objects.create(
+    lesson = get_lesson(schoolkid, subject_title)
+    return Commendation.objects.create(
         text=get_random_commendation_text(),
         schoolkid=schoolkid,
         created=lesson.date,
         subject=lesson.subject,
         teacher=lesson.teacher,
     )
-
-
-# get_schoolkid("Иван Фролов")
-get_lesson(get_schoolkid("Фролов Иван"), "Музыка1", "random1").date
